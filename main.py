@@ -1,139 +1,141 @@
-import json,os;from urllib.request import*
-W=[0,100,320,330,500,900,0,100,320,330,500,900,0];M=100000;KD=[-17,-16,-15,-1,1,15,16,17];ND=[-33,-31,-18,-14,14,18,31,33]
-TP=["k"*8+"uuuuuuuummoqqommllmppmllkkkookkkljikkijllmmggmml"+"k"*8,"eccaacce"*4+"geecceegiggggggiookkkkoooqmkkmqo"]
-PS=[None]+[[(ord(c)-107)*5 for c in t]for t in TP];PS[2:2]=[[0]*64]*4
-MV=[None]*128
-for s in range(128):
- if s&0x88:continue
- sl=[]
- for d in KD:
-  r=[];t=s+d
-  while not t&0x88:r.append(t);t+=d
-  sl.append(r)
- MV[s]=[0,0,[[s+d]for d in ND if not(s+d)&0x88],[sl[i]for i in(0,2,5,7)],[sl[i]for i in(1,3,4,6)],sl,[r[:1]for r in sl if r]]
-B=[0]*128;S=0;C=0;E=-1;KS=[0,0];NDS=0;LIM=85000;BM=0;T={};HH=[0]*16384;SQ=[s for s in range(128)if s&119==s]
-CM=[15]*128;CM[119]=14;CM[112]=13;CM[7]=11;CM[0]=7
-def fen(f):
- global B,S,C,E
- B=[0]*128;w=f.split();s=0
- for c in w[0]:
-  if c=="/":s+=8
-  elif c.isdigit():s+=int(c)
-  else:
-   p="pnbrqk".index(c.lower())+1;B[s]=p+6*(c>"Z")
-   if p==6:KS[c>"Z"]=s
-   s+=1
- S=w[1]!="w";C=sum((c in w[2])<<i for i,c in enumerate("KQkq"));E=-1 if w[3]=="-"else(8-int(w[3][1]))*16+ord(w[3][0])-97
-def atk(s,by):
- b=6*by;d=32*by-16
- for t in(s-d-1,s-d+1):
-  if not t&0x88 and B[t]==1+b:return 1
- for pt in range(2,7):
-  for ray in MV[s][pt]:
-   for t in ray:
-    q=B[t]
-    if q:
-     if q==pt+b:return 1
-     break
+import os,json,urllib.request as u
+V=(0,100,320,330,500,900,0);D=(15,17,-15,-17,1,-1,16,-16);J=(33,31,18,14,-14,-18,-31,-33)
+B=[0]*128;t=1;c=15;ep=-1;NM=6400;N=0;L=80000
+TT={};KL=0;Pt=[];Ud=[]
+Mc={0:13,7:14,4:12,112:7,119:11,116:3};X=Exception
+def hk():return hash((tuple(B),t,c,ep))
+def A(q,w):
+ for d in(15,17):
+  x=q-w*d
+  if not x&136 and B[x]==w:return 1
+ for d in J+D:
+  x=q+d
+  if not x&136 and B[x]==w*(6-4*(d in J)):return 1
+ for j,d in enumerate(D):
+  x=q
+  while 1:
+   x+=d
+   if x&136:break
+   p=B[x]
+   if p:
+    if p in(w*5,w*(3+(j>3))):return 1
+    break
  return 0
-def gen(cap):
- ms=[];bl=S;b=6*bl;fw=32*bl-16;sr=6-5*bl;pr=1+5*bl;ap=ms.append
- def pm(s,t):
-  if(s>>4)==pr:
-   for x in(5,4,3,2):ap(s|t<<7|x<<14)
-  else:ap(s|t<<7)
- for s in SQ:
-  p=B[s]
-  if not p or(p>6)!=bl:continue
-  pt=p-b
-  if pt==1:
-   for d in(fw-1,fw+1):
-    t=s+d
-    if not t&0x88 and((B[t]and(B[t]>6)!=bl)or t==E):pm(s,t)
-   t=s+fw
-   if not B[t]and(not cap or(s>>4)==pr):
-    pm(s,t)
-    if not cap and(s>>4)==sr and not B[s+2*fw]:ap(s|s+2*fw<<7)
+def G(cp):
+ m=[];ad=lambda x:m.append(f|(x<<7));am=lambda to:[m.append(f|(to<<7)|(q<<14))for q in(5,4,3,2)]if(to>>4)==7*(t>0)else ad(to)
+ for f,p in enumerate(B):
+  if p*t<=0:continue
+  a=abs(p)
+  if a==1:
+   d=16*t;to=f+d
+   if B[to]==0 and(not cp or(to>>4)==7*(t>0)):
+    am(to)
+    if(f>>4)==1+5*(t<0) and B[f+2*d]==0:ad(f+2*d)
+   for dd in(d-1,d+1):
+    to=f+dd
+    if not to&136 and(B[to]*t<0 or to==ep):am(to)
   else:
-   for ray in MV[s][pt]:
-    for t in ray:
-     q=B[t]
-     if q:
-      if(q>6)!=bl:ap(s|t<<7)
-      break
-     if not cap:ap(s|t<<7)
-   if pt==6 and not cap:
-    for sg,bit in((1,1),(-1,2)):
-     if C&(bit<<2*bl)and B[s+[3,-4][sg<0]]==4+b and all(not B[s+d]for d in[(1,2),(-1,-2,-3)][sg<0])and all(not atk(s+d,1-bl)for d in(0,sg,2*sg)):ap(s|s+2*sg<<7)
- return ms
-def mk(m):
- global S,C,E
- f=m&127;t=(m>>7)&127;pr=(m>>14)&7;p=B[f];b=(p>6)*6;pt=p-b;cp=B[t]
- if pt==1 and t==E and not cp and(f&7)!=(t&7):B[t+16-32*(p>6)]=0
- B[f]=0;B[t]=pr+b if pr else p
- if pt==6:
-  KS[p>6]=t;C&=~(3+9*(p>6))
-  if abs(t-f)==2:
-   rf,rt=(f+3,f+1)if t>f else(f-4,f-1);B[rf],B[rt]=B[rt],B[rf]
- C&=CM[f]&CM[t];E=-1
- if pt==1 and abs(t-f)==32:E=(f+t)//2
- S=1-S
-def ev():
- s=0
- for q in SQ:
-  p=B[q]
-  if not p:continue
-  bl=p>6;pt=p-6*bl;i=q-(q>>4)*8;v=W[pt]+PS[pt][i^(56*bl)]
-  s+=-v if bl else v
- return s
-def ordm(ms,tm):
- def sc(m):cp=B[(m>>7)&127];return(7**9)if m==tm else W[cp]*16-W[B[m&127]]if cp else HH[m&16383]//16
- return sorted(ms,key=sc,reverse=True)
-def sr(d,a,be,ply):
- global NDS,BM,C,E,S
- NDS+=1
- if NDS>LIM:exit()
- tm=d>0 and T.get(bytes(B))or 0
- chk=atk(KS[S],1-S)
+   os=J if a==2 else D[:4] if a==3 else D[4:] if a==4 else D;sl=2<a<6
+   for st in os:
+    to=f
+    while 1:
+     to+=st
+     if to&136:break
+     if B[to]*t<0 or(not cp and B[to]==0):ad(to)
+     if B[to] or not sl:break
+   if a==6 and not cp:
+    for sgn,bt in((1,1<<2*(t<0)),(-1,2<<2*(t<0))):
+     if c&bt and all(B[f+j*sgn]==0 and not A(f+j*sgn,-t)for j in(1,2))and(sgn>0 or B[f-3]==0)and not A(f,-t):ad(f+2*sgn)
+ return m
+def M(m):
+ global t,c,ep,NM
+ f=m&127;to=(m>>7)&127;pr=m>>14
+ p=B[f];v=B[to];cs=-1
+ if p==t and to==ep and v==0:cs=to-16*t;v=B[cs]
+ Ud.append((B[:],t,c,ep,NM))
+ if cs>=0:B[cs]=0
+ B[f]=0
+ if pr:B[to]=pr*t;NM+=V[pr]-100
+ else:B[to]=p
+ if abs(v)>1:NM-=V[abs(v)]
+ if p==6*t and abs(to-f)==2:rf,rt=(to+1,to-1)if to>f else(to-2,to+1);B[rt]=B[rf];B[rf]=0
+ c&=Mc.get(f,15)&Mc.get(to,15)
+ ep=(f+to)//2 if p==t and abs(to-f)==32 else -1;t=-t
+def W():
+ global t,c,ep,NM
+ B[:],t,c,ep,NM=Ud.pop()
+def O(m):
+ if m==TM:return -99999
+ v=B[(m>>7)&127]
+ return -V[abs(v)]*10 if v else -9000 if m>>14 else -8000 if KL==m else 0
+def S(d,a,b,pl):
+ global N,BM,TM,KL,t,ep
+ if(N:=N+1)>L:raise X
+ k=hk()
+ if Pt.count(k)>1:return 0
+ d0,sc0,fl0,tm=TT.get(k,(-999,0,0,0))
+ if d0>=d and(fl0==0 or sc0>=b if fl0<2 else sc0<=a):
+  if pl==0:BM=tm
+  return sc0
+ chk=A(B.index(6*t),-t)
+ if chk:d+=1
  if d<=0 and not chk:
-  st=-ev()if S else ev()
-  if st>=be:return be
-  if st>a:a=st
- bst=-2*M
- for m in ordm(gen(d<=0 and not chk),tm):
-  sv=(B[:],C,E,KS[:],S);mk(m)
-  if atk(KS[1-S],S):
-   B[:],C,E,KS[:],S=sv;continue
-  v=-sr(d-1+chk,-be,-a,ply+1);B[:],C,E,KS[:],S=sv
-  if v>bst:
-   bst=v
-   if ply==0:BM=m
-   if d>0:T[bytes(B)]=m
-  if v>a:a=v
-  if a>=be:
-   if d>0 and not B[m>>7&127]:HH[m&16383]+=d
-   break
- if bst==-2*M:return-M+ply if chk else a if d<=0 else 0
- return a if d<=0 else bst
-def best(f):
- global NDS,BM
- fen(f);NDS=0;BM=0;T.clear()
- for d in range(99):
-  try:sr(d,-M-1,M+1,0)
-  except SystemExit:break
+  st=0
+  for i,p in enumerate(B):
+   if p:
+    u=abs(p);q=9*(i>>4 if p>0 else 7-(i>>4))if u==1 else 0
+    st+=V[u]+q if p*t>0 else -V[u]-q
+  if d<-5:return st
+  if st>=b:return b
+  a=max(a,st)
+ if d>=3 and not chk and NM>0:
+  oe=ep;ep,t=-1,-t;sc=-S(d-3,-b,-b+1,pl+1);t,ep=-t,oe
+  if sc>=b:return b
+ ms=G(not chk and d<=0);TM=tm;ms.sort(key=O);a0=a;bs=-99999;bm=0
+ for i,m in enumerate(ms):
+  to=(m>>7)&127;v=B[to];cp=v or to==ep or m>>14
+  if d<=0 and not chk and st+(V[abs(v)]or(to==ep)*100)+V[m>>14]+200<a:continue
+  M(m)
+  if A(B.index(-6*t),t):W();continue
+  Pt.append(hk())
+  r=i>2 and d>=3 and not chk and not cp
+  sc=-S(d-1-r,-a-1 if r else -b,-a,pl+1)
+  if r and sc>a:sc=-S(d-1,-b,-a,pl+1)
+  Pt.pop();W()
+  if sc>bs:bs=sc;bm=m
+  if sc>a:a=sc
+  if a>=b:KL=m;break
+ if bs==-99999:return -99999+pl if chk else a*(d<=0)
+ TT[k]=(d,bs,(bs>=b)or 2*(bs<=a0),bm)
+ if pl==0:BM=bm
+ return bs
+def CH():
+ global N,BM
+ Pt[:]=[hk()];BM=0
+ for d in range(8):
+  N=0
+  try:S(d+1,-99999,99999,0)
+  except X:
+   while Ud:W()
+  if N>4e4:break
  return BM
-def post(p,b):
- q=Request(ENV+p,data=json.dumps(b).encode(),headers={"content-type":"application/json"})
- with urlopen(q)as x:return json.load(x)
-if __name__=="__main__":
- ENV=os.environ["MAKEFUN_ENV_URL"]
- while 1:
-  g=post("/game",{})
-  if g["status"]=="done":break
-  while g["status"]=="your_move":
-   m=best(g["fen"]);u=g["legal_moves"][0]
-   if m:
-    u=""
-    for x in(m&127,m>>7&127):u+=chr(97+(x&7))+str(8-(x>>4))
-    if m>>14:u+="__nbrq"[m>>14]
-   g=post("/move",{"game":g["game"],"move":u})
+def UC(m):
+ f=m&127;to=(m>>7)&127
+ s='abcdefgh'[f&7]+str(1+(f>>4))+'abcdefgh'[to&7]+str(1+(to>>4))
+ return s+('nbrq'[(m>>14)-2] if m>>14 else '')
+def post(p,d):
+ try:return json.load(u.urlopen(os.environ['MAKEFUN_ENV_URL']+p,json.dumps(d).encode()))
+ except Exception as h:return json.load(h)
+lg=-1;sn=0
+while 1:
+ g=post('/game',{})
+ if g['status']=='done':break
+ if g['game']!=lg:
+  lg=gm=g['game'];sn=0;B=[0]*128;NM=6400;t=1;c=15;ep=-1
+  for i,p in enumerate((4,2,3,5,6,3,2,4)):B[i]=p;B[i+112]=-p;B[i+16]=1;B[i+96]=-1
+ while g['status']=='your_move':
+  for s in g['moves'][sn:]:[M(m)for m in G(0)if UC(m)==s]
+  sn=len(g['moves']);Ud=[];mv=CH()
+  s=UC(mv) if mv else g['legal_moves'][0]
+  r=post('/move',{'game':gm,'move':s})
+  g=r
