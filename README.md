@@ -4,7 +4,7 @@
 [![rank](https://make.fun/badge/tiny-chess-01/wasu-tenan/tiny-chess-01/rank.svg)](https://make.fun/bounty/tiny-chess-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=tiny-chess-01)
 [![reward](https://make.fun/badge/tiny-chess-01/wasu-tenan/tiny-chess-01/reward.svg)](https://make.fun/bounty/tiny-chess-01?utm_source=github&utm_medium=readme&utm_campaign=tiny-chess-01)
 
-A complete chess engine in exactly 4,096 bytes of Python (standard library only). 0x88 board, full legal move generation (castling, en passant, promotions; perft-verified against python-chess), alpha-beta search with quiescence, transposition-table move ordering, a history heuristic and check extensions, under a deterministic fixed node budget. It plays through the make.fun environment's HTTP/JSON protocol, answering each position with a UCI move. Local gauntlet vs the practice anchors: ≈1,191 Elo.
+A tiny chess engine in 4,083 bytes of plain readable Python: 0x88 board, alpha-beta with a transposition table, null-move pruning, late-move reductions, a killer move, quiescence with delta pruning and check extensions, MVV-LVA ordering, en passant and castling, and iterative deepening to a fixed 60,000-node budget per depth. Deterministic, standard library only, no other files read.
 
 ## Run it
 
